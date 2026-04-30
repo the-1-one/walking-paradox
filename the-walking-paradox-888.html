@@ -1,0 +1,1656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-title" content="WP OS"/>
+<meta name="theme-color" content="#080810"/>
+<title>The Walking Paradox — Personal OS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet"/>
+<style>
+
+/* ═══════════════════════════════════════════════════
+   DESIGN TOKENS
+   Three identities, one system.
+   Suman = amber (earth, duty, money)
+   Raahi = teal (movement, freedom, wandering)  
+   The One = violet (cosmos, spirit, service)
+═══════════════════════════════════════════════════ */
+:root {
+  /* Base */
+  --bg:       #07070F;
+  --bg2:      #0E0E1C;
+  --bg3:      #14142A;
+  --bg4:      #1A1A30;
+  --border:   #2A2A45;
+  --text:     #E8E4F0;
+  --text2:    #9090B8;
+  --text3:    #5A5A80;
+
+  /* Suman — amber, earth, money, duty */
+  --suman:        #F0A020;
+  --suman-dim:    #6A4A08;
+  --suman-glow:   rgba(240,160,32,0.12);
+
+  /* Raahi — teal, movement, freedom */
+  --raahi:        #20C0B0;
+  --raahi-dim:    #0A5048;
+  --raahi-glow:   rgba(32,192,176,0.10);
+
+  /* The One — violet, cosmos, spirit */
+  --one:          #A060FF;
+  --one-dim:      #3A1A6A;
+  --one-glow:     rgba(160,96,255,0.10);
+
+  /* Active identity (changes with tab) */
+  --accent:       var(--suman);
+  --accent-glow:  var(--suman-glow);
+
+  /* Typography */
+  --font-display: 'Cinzel', Georgia, serif;
+  --font-mono:    'DM Mono', monospace;
+  --font-body:    'Lora', Georgia, serif;
+}
+
+/* Active identity themes */
+body.identity-suman { --accent: var(--suman); --accent-glow: var(--suman-glow); }
+body.identity-raahi  { --accent: var(--raahi);  --accent-glow: var(--raahi-glow);  }
+body.identity-one    { --accent: var(--one);    --accent-glow: var(--one-glow);    }
+
+/* ── Reset & Base ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: var(--bg2); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* ── Header ── */
+#header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(7,7,15,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+#header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+#logo {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: 2px;
+  white-space: nowrap;
+  transition: color 0.3s;
+}
+
+#header-date {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text3);
+  display: none;
+}
+
+/* Identity switcher */
+#identity-switch {
+  display: flex;
+  gap: 6px;
+}
+.id-btn {
+  padding: 4px 12px;
+  border-radius: 3px;
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  transition: all 0.2s;
+}
+.id-btn.suman { color: var(--suman); border-color: var(--suman-dim); }
+.id-btn.raahi  { color: var(--raahi);  border-color: var(--raahi-dim);  }
+.id-btn.one    { color: var(--one);    border-color: var(--one-dim);    }
+.id-btn.active { color: #0A0A14; font-weight: 700; }
+.id-btn.suman.active { background: var(--suman); border-color: var(--suman); }
+.id-btn.raahi.active  { background: var(--raahi);  border-color: var(--raahi);  }
+.id-btn.one.active    { background: var(--one);    border-color: var(--one);    }
+
+/* ── Nav Tabs ── */
+#nav {
+  display: flex;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg2);
+  scrollbar-width: none;
+  gap: 0;
+}
+#nav::-webkit-scrollbar { display: none; }
+.nav-tab {
+  padding: 11px 18px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text3);
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.2s;
+  letter-spacing: 0.5px;
+}
+.nav-tab:hover { color: var(--text2); }
+.nav-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* ── Panels ── */
+.panel { display: none; padding: 20px 16px 60px; max-width: 900px; margin: 0 auto; }
+.panel.active { display: block; }
+
+/* ── Section Titles ── */
+.sec-title {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.sec-title span { color: var(--accent); }
+
+/* ── Cards ── */
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  transition: border-color 0.2s;
+}
+.card:hover { border-color: var(--text3); }
+.card.accent-border { border-color: var(--accent); background: var(--accent-glow); }
+
+/* ── Buttons ── */
+.btn {
+  padding: 8px 18px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  transition: all 0.2s;
+}
+.btn-primary { background: var(--accent); color: #07070F; font-weight: 700; }
+.btn-primary:hover { filter: brightness(1.15); }
+.btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text2); }
+.btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+.btn-danger { background: transparent; border: 1px solid #602020; color: #FF6060; }
+.btn-danger:hover { background: rgba(255,60,60,0.1); }
+
+/* ── Inputs ── */
+.input, .textarea, .select {
+  width: 100%;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 9px 12px;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.input:focus, .textarea:focus, .select:focus { border-color: var(--accent); }
+.textarea { resize: vertical; line-height: 1.6; }
+.select option { background: var(--bg3); }
+label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 5px;
+}
+
+/* ── Progress Bars ── */
+.progress-wrap { margin: 6px 0; }
+.progress-label {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text2);
+  margin-bottom: 5px;
+}
+.progress-bar {
+  height: 6px;
+  background: var(--bg3);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--accent);
+  transition: width 0.5s ease;
+}
+
+/* ── Badge ── */
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+.badge-suman { background: var(--suman-glow); color: var(--suman); border: 1px solid var(--suman-dim); }
+.badge-raahi  { background: var(--raahi-glow);  color: var(--raahi);  border: 1px solid var(--raahi-dim);  }
+.badge-one    { background: var(--one-glow);    color: var(--one);    border: 1px solid var(--one-dim);    }
+
+/* ═══════════════════════════════════════════════
+   WAR ROOM — Suman's daily mission
+═══════════════════════════════════════════════ */
+
+/* Priority tasks — max 3 */
+.priority-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.priority-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+  min-height: 90px;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.priority-card:hover { border-color: var(--accent); }
+.priority-card.done {
+  opacity: 0.5;
+  border-color: #3A3A50;
+}
+.priority-card.done .pc-text { text-decoration: line-through; color: var(--text3); }
+.pc-num {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--accent);
+  opacity: 0.3;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+.pc-text {
+  font-size: 14px;
+  color: var(--text);
+  font-style: italic;
+  line-height: 1.4;
+  flex: 1;
+}
+.pc-check {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 8px;
+  align-self: flex-end;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.priority-card.done .pc-check {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #07070F;
+}
+.pc-empty {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text3);
+  font-style: normal;
+}
+
+/* Task list */
+.task-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  margin-bottom: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+  user-select: none;
+}
+.task-item:hover { border-color: var(--text3); }
+.task-item.done { opacity: 0.45; }
+.task-item.done .task-text { text-decoration: line-through; color: var(--text3); }
+.task-check {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  flex-shrink: 0;
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  font-size: 10px;
+}
+.task-item.done .task-check {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #07070F;
+}
+.task-text { font-size: 14px; flex: 1; line-height: 1.45; }
+.task-meta {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text3);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.task-del {
+  background: transparent;
+  border: none;
+  color: var(--text3);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.task-item:hover .task-del { opacity: 1; }
+
+/* ═══════════════════════════════════════════════
+   INCOME & DEBT TRACKER
+═══════════════════════════════════════════════ */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.stat-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+.stat-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 6px;
+}
+.stat-value {
+  font-family: var(--font-mono);
+  font-size: 24px;
+  font-weight: 500;
+  color: var(--accent);
+  line-height: 1.2;
+}
+.stat-sub {
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: 2px;
+}
+
+/* Debt item */
+.debt-item {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+}
+.debt-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.debt-name { font-size: 14px; font-weight: 500; }
+.debt-amounts {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text2);
+}
+.debt-total { color: #FF6060; }
+
+/* Income log */
+.income-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 4px;
+  background: var(--bg3);
+  margin-bottom: 5px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+.income-amount { color: #60D080; font-weight: 500; }
+
+/* ═══════════════════════════════════════════════
+   NEWS PORTAL
+═══════════════════════════════════════════════ */
+.news-categories {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.cat-btn {
+  padding: 5px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text2);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.cat-btn:hover { border-color: var(--accent); color: var(--accent); }
+.cat-btn.active { background: var(--accent); color: #07070F; border-color: var(--accent); font-weight: 700; }
+
+.news-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.news-card:hover { border-color: var(--accent); background: var(--accent-glow); }
+.news-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.4;
+}
+.news-meta {
+  display: flex;
+  gap: 10px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text3);
+}
+.news-source { color: var(--accent); }
+.news-desc {
+  font-size: 12px;
+  color: var(--text2);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.news-loading {
+  text-align: center;
+  padding: 40px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text3);
+}
+
+/* ═══════════════════════════════════════════════
+   IDEA VAULT
+═══════════════════════════════════════════════ */
+.idea-item {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-left: 3px solid transparent;
+  border-radius: 6px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  position: relative;
+}
+.idea-item[data-cat="suman"] { border-left-color: var(--suman); }
+.idea-item[data-cat="raahi"]  { border-left-color: var(--raahi); }
+.idea-item[data-cat="one"]    { border-left-color: var(--one); }
+.idea-item[data-cat="work"]   { border-left-color: #60D080; }
+.idea-item[data-cat="content"]{ border-left-color: #FF80C0; }
+.idea-text { font-size: 14px; line-height: 1.5; margin-bottom: 6px; }
+.idea-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text3);
+}
+.idea-del { background: none; border: none; color: var(--text3); cursor: pointer; font-size: 13px; }
+.idea-del:hover { color: #FF6060; }
+
+/* ═══════════════════════════════════════════════
+   SADHANA LOG
+═══════════════════════════════════════════════ */
+.practice-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 6px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  margin-bottom: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.practice-item.done { border-color: var(--one-dim); background: var(--one-glow); }
+.practice-icon { font-size: 20px; flex-shrink: 0; }
+.practice-name { font-size: 14px; flex: 1; }
+.practice-item.done .practice-name { color: var(--one); }
+.practice-duration {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text3);
+}
+.streak-display {
+  text-align: center;
+  padding: 20px;
+  background: var(--bg2);
+  border: 1px solid var(--one-dim);
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+.streak-number {
+  font-family: var(--font-display);
+  font-size: 48px;
+  color: var(--one);
+  line-height: 1;
+}
+.streak-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text3);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+/* ── Notification dot ── */
+.notif-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  display: inline-block;
+  margin-left: 5px;
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%,100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* ── Form row ── */
+.form-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.form-group { flex: 1 1 140px; }
+.form-group.full { flex: 1 1 100%; }
+
+/* ── Divider ── */
+.divider { height: 1px; background: var(--border); margin: 18px 0; }
+
+/* ── Mobile ── */
+@media(max-width: 600px) {
+  .priority-grid { grid-template-columns: 1fr; }
+  .stat-grid { grid-template-columns: 1fr 1fr; }
+  #header-date { display: none; }
+  .panel { padding: 14px 12px 80px; }
+}
+@media(min-width: 600px) {
+  #header-date { display: block; }
+}
+
+/* ── Fade in ── */
+.panel.active { animation: fadeIn 0.2s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* ── Empty state ── */
+.empty {
+  text-align: center;
+  padding: 32px 16px;
+  color: var(--text3);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+/* ── Toast ── */
+#toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--bg4);
+  border: 1px solid var(--accent);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 10px 20px;
+  border-radius: 20px;
+  z-index: 9999;
+  transition: transform 0.3s ease;
+  white-space: nowrap;
+}
+#toast.show { transform: translateX(-50%) translateY(0); }
+
+</style>
+</head>
+<body class="identity-suman">
+
+<div id="toast"></div>
+
+<!-- ═══════ HEADER ═══════ -->
+<div id="header">
+  <div id="header-left">
+    <div id="logo">WP·OS</div>
+    <div id="header-date"></div>
+  </div>
+  <div id="identity-switch">
+    <button class="id-btn suman active" onclick="setIdentity('suman')">SUMAN</button>
+    <button class="id-btn raahi"  onclick="setIdentity('raahi')">RAAHI</button>
+    <button class="id-btn one"    onclick="setIdentity('one')">THE ONE</button>
+  </div>
+</div>
+
+<!-- ═══════ NAV ═══════ -->
+<div id="nav">
+  <button class="nav-tab active" onclick="showPanel('warroom',this)">⚔️ War Room</button>
+  <button class="nav-tab"        onclick="showPanel('news',this)">📡 Intel</button>
+  <button class="nav-tab"        onclick="showPanel('finance',this)">💰 Finance</button>
+  <button class="nav-tab"        onclick="showPanel('ideas',this)">💡 Vault</button>
+  <button class="nav-tab"        onclick="showPanel('sadhana',this)">🕉️ Sadhana</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     WAR ROOM
+═══════════════════════════════════════════════ -->
+<div id="panel-warroom" class="panel active">
+
+  <!-- Today's status bar -->
+  <div class="card accent-border" style="margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+    <div>
+      <div style="font-family:var(--font-mono);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--text3);margin-bottom:3px">Today's Mission</div>
+      <div id="wr-date-display" style="font-family:var(--font-display);font-size:18px;color:var(--accent)"></div>
+    </div>
+    <div id="wr-progress-wrap" style="flex:1;min-width:180px">
+      <div class="progress-label">
+        <span>Daily Progress</span>
+        <span id="wr-progress-text">0 / 0</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="wr-progress-fill" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <!-- Top 3 Priorities -->
+  <div class="sec-title">
+    <span>★ Top 3 Priorities</span>
+    <button class="btn btn-ghost" style="font-size:11px;padding:3px 10px" onclick="openAddPriority()">+ Set</button>
+  </div>
+  <div class="priority-grid" id="priority-grid">
+    <!-- rendered by JS -->
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- All Tasks -->
+  <div class="sec-title">
+    <span>All Tasks</span>
+    <div style="display:flex;gap:6px">
+      <select class="select" id="task-filter" onchange="renderTasks()" style="padding:3px 8px;font-size:11px;width:auto">
+        <option value="all">All</option>
+        <option value="active">Active</option>
+        <option value="done">Done</option>
+      </select>
+      <button class="btn btn-ghost" style="font-size:11px;padding:3px 10px" onclick="openAddTask()">+ Add</button>
+    </div>
+  </div>
+
+  <!-- Add task form (hidden by default) -->
+  <div id="add-task-form" style="display:none;margin-bottom:14px">
+    <div class="card">
+      <div class="form-row">
+        <div class="form-group full">
+          <label>Task</label>
+          <input type="text" class="input" id="new-task-text" placeholder="What needs to be done?" onkeydown="if(event.key==='Enter')saveTask()"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Category</label>
+          <select class="select" id="new-task-cat">
+            <option value="suman">Suman (Work/Money)</option>
+            <option value="raahi">Raahi (Projects)</option>
+            <option value="one">The One (Growth)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Priority</label>
+          <select class="select" id="new-task-priority">
+            <option value="normal">Normal</option>
+            <option value="high">High</option>
+            <option value="urgent">Urgent</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary" onclick="saveTask()">Save Task</button>
+        <button class="btn btn-ghost" onclick="closeAddTask()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="task-list"></div>
+
+  <!-- Add priority form (hidden) -->
+  <div id="priority-form" style="display:none;margin-bottom:14px">
+    <div class="card">
+      <div style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;color:var(--text3);margin-bottom:12px">SET TODAY'S TOP 3 PRIORITIES</div>
+      <div class="form-group" style="margin-bottom:8px">
+        <label>Priority 1</label>
+        <input type="text" class="input" id="p1" placeholder="The most important thing today..."/>
+      </div>
+      <div class="form-group" style="margin-bottom:8px">
+        <label>Priority 2</label>
+        <input type="text" class="input" id="p2" placeholder="Second most important..."/>
+      </div>
+      <div class="form-group" style="margin-bottom:12px">
+        <label>Priority 3</label>
+        <input type="text" class="input" id="p3" placeholder="Third most important..."/>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary" onclick="savePriorities()">Set Priorities</button>
+        <button class="btn btn-ghost" onclick="closePriorityForm()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     NEWS / INTEL
+═══════════════════════════════════════════════ -->
+<div id="panel-news" class="panel">
+  <div class="sec-title">
+    <span>Morning Intel</span>
+    <button class="btn btn-ghost" style="font-size:11px;padding:3px 10px" onclick="loadNews(activeNewsCategory)">↻ Refresh</button>
+  </div>
+  <div class="news-categories">
+    <button class="cat-btn active" onclick="loadNews('geopolitics',this)">🌍 Geopolitics</button>
+    <button class="cat-btn" onclick="loadNews('technology',this)">💻 Technology</button>
+    <button class="cat-btn" onclick="loadNews('science',this)">🔬 Science</button>
+    <button class="cat-btn" onclick="loadNews('nepal',this)">🏔️ Nepal</button>
+    <button class="cat-btn" onclick="loadNews('cybersecurity',this)">🔒 Cyber</button>
+  </div>
+  <div id="news-feed">
+    <div class="news-loading">Loading intel...</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     FINANCE — Income + Debt
+═══════════════════════════════════════════════ -->
+<div id="panel-finance" class="panel">
+
+  <!-- Stats overview -->
+  <div class="sec-title"><span>This Week</span></div>
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="stat-label">Weekly Earned</div>
+      <div class="stat-value" id="weekly-earned">$0</div>
+      <div class="stat-sub">Goal: $2,000</div>
+      <div class="progress-wrap" style="margin-top:8px">
+        <div class="progress-bar"><div class="progress-fill" id="weekly-fill" style="width:0%"></div></div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Today's Earnings</div>
+      <div class="stat-value" id="today-earned" style="color:var(--raahi)">$0</div>
+      <div class="stat-sub">Daily target: ~$285</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Total Debt</div>
+      <div class="stat-value" style="color:#FF6060" id="total-debt">$0</div>
+      <div class="stat-sub">Keep fighting</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Net Position</div>
+      <div class="stat-value" id="net-position">$0</div>
+      <div class="stat-sub">Assets - Debt</div>
+    </div>
+  </div>
+
+  <!-- Log income -->
+  <div class="sec-title">
+    <span>Log Today's Income</span>
+  </div>
+  <div class="card" style="margin-bottom:16px">
+    <div class="form-row">
+      <div class="form-group">
+        <label>Source</label>
+        <select class="select" id="income-source">
+          <option value="Spark">Spark</option>
+          <option value="Uber">Uber</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Amount ($)</label>
+        <input type="number" class="input" id="income-amount" placeholder="0.00" step="0.01" min="0"/>
+      </div>
+      <div class="form-group">
+        <label>Hours</label>
+        <input type="number" class="input" id="income-hours" placeholder="0" step="0.5" min="0"/>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="logIncome()">Log Income</button>
+  </div>
+
+  <!-- Income history -->
+  <div class="sec-title"><span>Income Log</span><button class="btn btn-ghost" style="font-size:11px;padding:3px 10px" onclick="clearOldIncome()">Clear Old</button></div>
+  <div id="income-list"></div>
+
+  <div class="divider"></div>
+
+  <!-- Debt tracker -->
+  <div class="sec-title">
+    <span>Debt Tracker</span>
+    <button class="btn btn-ghost" style="font-size:11px;padding:3px 10px" onclick="openAddDebt()">+ Add Debt</button>
+  </div>
+
+  <div id="add-debt-form" style="display:none;margin-bottom:14px">
+    <div class="card">
+      <div class="form-row">
+        <div class="form-group"><label>Debt Name</label><input type="text" class="input" id="debt-name" placeholder="Credit card, loan..."/></div>
+        <div class="form-group"><label>Total Amount ($)</label><input type="number" class="input" id="debt-total" placeholder="0"/></div>
+        <div class="form-group"><label>Remaining ($)</label><input type="number" class="input" id="debt-remaining" placeholder="0"/></div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary" onclick="saveDebt()">Save</button>
+        <button class="btn btn-ghost" onclick="document.getElementById('add-debt-form').style.display='none'">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="debt-list"></div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     IDEA VAULT
+═══════════════════════════════════════════════ -->
+<div id="panel-ideas" class="panel">
+
+  <!-- Quick capture -->
+  <div class="card accent-border" style="margin-bottom:18px">
+    <div style="font-family:var(--font-mono);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--text3);margin-bottom:10px">Quick Capture — Don't Lose It</div>
+    <textarea class="textarea" id="idea-input" rows="3" placeholder="What's the idea? Dump it here, tag it later..." style="margin-bottom:10px"></textarea>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <select class="select" id="idea-cat" style="flex:1;min-width:140px">
+        <option value="suman">Suman — Work/Money</option>
+        <option value="raahi">Raahi — Adventure/Project</option>
+        <option value="one">The One — Spirit/Service</option>
+        <option value="content">Content Idea</option>
+        <option value="work">OT/ICS Career</option>
+      </select>
+      <button class="btn btn-primary" onclick="saveIdea()">Capture ⚡</button>
+    </div>
+  </div>
+
+  <!-- Filter -->
+  <div class="sec-title">
+    <span>Vault <span id="idea-count" style="font-size:10px;color:var(--text3)"></span></span>
+    <div style="display:flex;gap:6px">
+      <select class="select" id="idea-filter" onchange="renderIdeas()" style="padding:3px 8px;font-size:11px;width:auto">
+        <option value="all">All</option>
+        <option value="suman">Suman</option>
+        <option value="raahi">Raahi</option>
+        <option value="one">The One</option>
+        <option value="content">Content</option>
+        <option value="work">Career</option>
+      </select>
+      <button class="btn btn-ghost" style="font-size:11px;padding:3px 10px" onclick="clearDoneIdeas()">Clear Old</button>
+    </div>
+  </div>
+
+  <div id="idea-list"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SADHANA LOG
+═══════════════════════════════════════════════ -->
+<div id="panel-sadhana" class="panel">
+
+  <!-- Streak -->
+  <div class="streak-display" style="margin-bottom:18px">
+    <div class="streak-number" id="streak-num">0</div>
+    <div class="streak-label">Day Streak</div>
+    <div style="font-size:12px;color:var(--text3);margin-top:6px;font-family:var(--font-body);font-style:italic" id="streak-msg"></div>
+  </div>
+
+  <div class="sec-title"><span>Today's Practice</span></div>
+
+  <div id="practice-list">
+    <!-- rendered by JS -->
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Journal -->
+  <div class="sec-title"><span>Reflection</span></div>
+  <div class="card">
+    <label>Today's Intention / Reflection</label>
+    <textarea class="textarea" id="journal-entry" rows="5" placeholder="What are you grateful for? What did you learn? What will you do differently tomorrow?..." style="margin-bottom:10px"></textarea>
+    <button class="btn btn-primary" onclick="saveJournal()" style="background:var(--one);border-color:var(--one)">Save Reflection</button>
+  </div>
+
+  <div id="journal-history" style="margin-top:16px"></div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     JAVASCRIPT ENGINE
+     Each section is clearly separated and documented
+═══════════════════════════════════════════════ -->
+<script>
+
+// ════════════════════════════════════════════════
+// STORAGE — clean localStorage wrappers
+// All keys prefixed with 'wpos_' to avoid conflicts
+// ════════════════════════════════════════════════
+const Store = {
+  get(key, fallback = null) {
+    try {
+      const v = localStorage.getItem('wpos_' + key);
+      return v !== null ? JSON.parse(v) : fallback;
+    } catch { return fallback; }
+  },
+  set(key, value) {
+    try { localStorage.setItem('wpos_' + key, JSON.stringify(value)); } catch {}
+  },
+  remove(key) { localStorage.removeItem('wpos_' + key); }
+};
+
+// ════════════════════════════════════════════════
+// UTILS
+// ════════════════════════════════════════════════
+const today = () => new Date().toISOString().slice(0, 10);
+const now = () => new Date().toISOString();
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2);
+const fmtCurrency = n => '$' + parseFloat(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtDate = d => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ════════════════════════════════════════════════
+// IDENTITY SYSTEM
+// Switches color theme between Suman/Raahi/The One
+// ════════════════════════════════════════════════
+function setIdentity(id) {
+  document.body.className = 'identity-' + id;
+  document.querySelectorAll('.id-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.id-btn.' + id).classList.add('active');
+  Store.set('identity', id);
+}
+
+// ════════════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════════════
+function showPanel(id, el) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  if (el) el.classList.add('active');
+  // Lazy load news on first visit
+  if (id === 'news' && !newsLoaded) loadNews('geopolitics');
+}
+
+// ════════════════════════════════════════════════
+// HEADER — date + greeting
+// ════════════════════════════════════════════════
+function updateHeader() {
+  const now = new Date();
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const dateStr = `${days[now.getDay()]}, ${months[now.getMonth()]} ${now.getDate()}`;
+  document.getElementById('header-date').textContent = dateStr;
+
+  // War room date
+  const warEl = document.getElementById('wr-date-display');
+  if (warEl) {
+    const hour = now.getHours();
+    const greeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
+    warEl.textContent = `${greeting} — ${dateStr}`;
+  }
+}
+
+// ════════════════════════════════════════════════
+// WAR ROOM — Priorities (max 3)
+// ════════════════════════════════════════════════
+function openAddPriority() {
+  const f = document.getElementById('priority-form');
+  f.style.display = f.style.display === 'none' ? 'block' : 'none';
+  // Pre-fill existing
+  const p = Store.get('priorities_' + today(), ['', '', '']);
+  document.getElementById('p1').value = p[0] || '';
+  document.getElementById('p2').value = p[1] || '';
+  document.getElementById('p3').value = p[2] || '';
+  if (f.style.display === 'block') document.getElementById('p1').focus();
+}
+
+function closePriorityForm() {
+  document.getElementById('priority-form').style.display = 'none';
+}
+
+function savePriorities() {
+  const p = [
+    document.getElementById('p1').value.trim(),
+    document.getElementById('p2').value.trim(),
+    document.getElementById('p3').value.trim()
+  ];
+  Store.set('priorities_' + today(), p);
+  // Reset done state when priorities change
+  Store.set('priorities_done_' + today(), [false, false, false]);
+  closePriorityForm();
+  renderPriorities();
+  showToast('Priorities set. Let\'s go.');
+}
+
+function togglePriority(idx) {
+  const done = Store.get('priorities_done_' + today(), [false, false, false]);
+  done[idx] = !done[idx];
+  Store.set('priorities_done_' + today(), done);
+  renderPriorities();
+  updateWarRoomProgress();
+}
+
+function renderPriorities() {
+  const priorities = Store.get('priorities_' + today(), ['', '', '']);
+  const done = Store.get('priorities_done_' + today(), [false, false, false]);
+  const grid = document.getElementById('priority-grid');
+  grid.innerHTML = '';
+
+  for (let i = 0; i < 3; i++) {
+    const card = document.createElement('div');
+    card.className = 'priority-card' + (done[i] ? ' done' : '');
+    card.onclick = () => { if (priorities[i]) togglePriority(i); };
+    card.innerHTML = `
+      <div class="pc-num">${i + 1}</div>
+      <div class="pc-text">${priorities[i] || '<span class="pc-empty">Not set — tap \'Set\' above</span>'}</div>
+      <div class="pc-check">${done[i] ? '✓' : ''}</div>`;
+    grid.appendChild(card);
+  }
+}
+
+// ════════════════════════════════════════════════
+// WAR ROOM — Tasks
+// ════════════════════════════════════════════════
+function openAddTask() {
+  const f = document.getElementById('add-task-form');
+  f.style.display = f.style.display === 'none' ? 'block' : 'none';
+  if (f.style.display === 'block') document.getElementById('new-task-text').focus();
+}
+
+function closeAddTask() {
+  document.getElementById('add-task-form').style.display = 'none';
+  document.getElementById('new-task-text').value = '';
+}
+
+function saveTask() {
+  const text = document.getElementById('new-task-text').value.trim();
+  if (!text) return;
+  const tasks = Store.get('tasks', []);
+  tasks.unshift({
+    id: uid(),
+    text,
+    cat: document.getElementById('new-task-cat').value,
+    priority: document.getElementById('new-task-priority').value,
+    done: false,
+    created: today()
+  });
+  Store.set('tasks', tasks);
+  closeAddTask();
+  renderTasks();
+  updateWarRoomProgress();
+  showToast('Task added.');
+}
+
+function toggleTask(id) {
+  const tasks = Store.get('tasks', []);
+  const t = tasks.find(t => t.id === id);
+  if (t) { t.done = !t.done; t.doneAt = t.done ? now() : null; }
+  Store.set('tasks', tasks);
+  renderTasks();
+  updateWarRoomProgress();
+}
+
+function deleteTask(id) {
+  let tasks = Store.get('tasks', []);
+  tasks = tasks.filter(t => t.id !== id);
+  Store.set('tasks', tasks);
+  renderTasks();
+  updateWarRoomProgress();
+}
+
+function renderTasks() {
+  let tasks = Store.get('tasks', []);
+  const filter = document.getElementById('task-filter').value;
+  if (filter === 'active') tasks = tasks.filter(t => !t.done);
+  if (filter === 'done') tasks = tasks.filter(t => t.done);
+
+  const container = document.getElementById('task-list');
+  if (!tasks.length) {
+    container.innerHTML = '<div class="empty">No tasks.<br/>Every mission starts with one action.</div>';
+    return;
+  }
+
+  const catColor = { suman: 'var(--suman)', raahi: 'var(--raahi)', one: 'var(--one)' };
+  container.innerHTML = tasks.map(t => `
+    <div class="task-item ${t.done ? 'done' : ''}" onclick="toggleTask('${t.id}')">
+      <div class="task-check">${t.done ? '✓' : ''}</div>
+      <div style="flex:1">
+        <div class="task-text">${t.text}</div>
+        <div style="display:flex;gap:8px;margin-top:3px">
+          <span class="badge badge-${t.cat}" style="font-size:9px">${t.cat.toUpperCase()}</span>
+          ${t.priority !== 'normal' ? `<span style="font-family:var(--font-mono);font-size:9px;color:${t.priority === 'urgent' ? '#FF6060' : 'var(--suman)'}">● ${t.priority.toUpperCase()}</span>` : ''}
+        </div>
+      </div>
+      <div class="task-meta">${fmtDate(t.created)}</div>
+      <button class="task-del" onclick="event.stopPropagation();deleteTask('${t.id}')">✕</button>
+    </div>`).join('');
+}
+
+function updateWarRoomProgress() {
+  const tasks = Store.get('tasks', []);
+  const todayTasks = tasks.filter(t => t.created === today());
+  const done = todayTasks.filter(t => t.done).length;
+  const total = todayTasks.length;
+  // Priorities
+  const pDone = (Store.get('priorities_done_' + today(), [false,false,false])).filter(Boolean).length;
+  const pTotal = (Store.get('priorities_' + today(), [])).filter(Boolean).length;
+  const totalDone = done + pDone;
+  const totalAll = total + pTotal;
+  const pct = totalAll ? Math.round((totalDone / totalAll) * 100) : 0;
+  document.getElementById('wr-progress-fill').style.width = pct + '%';
+  document.getElementById('wr-progress-text').textContent = `${totalDone} / ${totalAll}`;
+}
+
+// ════════════════════════════════════════════════
+// NEWS / INTEL
+// Uses RSS via rss2json.com (free, no key needed)
+// Falls back to curated static intel on failure
+// ════════════════════════════════════════════════
+let newsLoaded = false;
+let activeNewsCategory = 'geopolitics';
+
+// RSS feed map per category
+const NEWS_FEEDS = {
+  geopolitics:  'https://feeds.bbci.co.uk/news/world/rss.xml',
+  technology:   'https://feeds.feedburner.com/TechCrunch',
+  science:      'https://www.nasa.gov/rss/dyn/breaking_news.rss',
+  nepal:        'https://kathmandupost.com/rss',
+  cybersecurity:'https://feeds.feedburner.com/TheHackersNews'
+};
+
+const RSS_PROXY = 'https://api.rss2json.com/v1/api.json?rss_url=';
+
+async function loadNews(category, btnEl) {
+  activeNewsCategory = category;
+  newsLoaded = true;
+
+  // Update active button
+  if (btnEl) {
+    document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+    btnEl.classList.add('active');
+  } else {
+    document.querySelectorAll('.cat-btn').forEach(b => {
+      if (b.textContent.toLowerCase().includes(category.slice(0, 4).toLowerCase())) b.classList.add('active');
+    });
+  }
+
+  const feed = document.getElementById('news-feed');
+  feed.innerHTML = '<div class="news-loading">⟳ Fetching latest intel...</div>';
+
+  try {
+    const url = RSS_PROXY + encodeURIComponent(NEWS_FEEDS[category]) + '&count=12';
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Network error');
+    const data = await res.json();
+
+    if (!data.items || !data.items.length) throw new Error('No items');
+
+    feed.innerHTML = data.items.map(item => {
+      const title = item.title || 'No title';
+      const desc = (item.description || '').replace(/<[^>]+>/g, '').slice(0, 120);
+      const link = item.link || '#';
+      const pub = item.pubDate ? fmtDate(item.pubDate) : '';
+      const src = data.feed?.title || category;
+      return `<div class="news-card" onclick="window.open('${link}','_blank')">
+        <div class="news-title">${title}</div>
+        <div class="news-meta">
+          <span class="news-source">${src}</span>
+          <span>${pub}</span>
+        </div>
+        ${desc ? `<div class="news-desc">${desc}...</div>` : ''}
+      </div>`;
+    }).join('');
+
+  } catch (err) {
+    // Graceful fallback — show category-relevant placeholder
+    feed.innerHTML = `
+      <div class="card" style="text-align:center;padding:32px">
+        <div style="font-size:24px;margin-bottom:12px">📡</div>
+        <div style="font-family:var(--font-mono);font-size:12px;color:var(--text3);line-height:1.8">
+          Live feed unavailable right now.<br/>
+          Try refreshing or check your connection.<br/><br/>
+          <a href="${getCategoryLink(category)}" target="_blank" style="color:var(--accent)">→ Open ${category} news directly</a>
+        </div>
+      </div>`;
+  }
+}
+
+function getCategoryLink(cat) {
+  const links = {
+    geopolitics: 'https://www.bbc.com/news/world',
+    technology: 'https://techcrunch.com',
+    science: 'https://nasa.gov/news',
+    nepal: 'https://kathmandupost.com',
+    cybersecurity: 'https://thehackernews.com'
+  };
+  return links[cat] || 'https://news.google.com';
+}
+
+// ════════════════════════════════════════════════
+// FINANCE — Income Tracker
+// ════════════════════════════════════════════════
+const WEEKLY_GOAL = 2000;
+
+function logIncome() {
+  const amount = parseFloat(document.getElementById('income-amount').value);
+  const hours = parseFloat(document.getElementById('income-hours').value) || 0;
+  const source = document.getElementById('income-source').value;
+  if (!amount || amount <= 0) { showToast('Enter a valid amount.'); return; }
+
+  const log = Store.get('income_log', []);
+  log.unshift({ id: uid(), amount, hours, source, date: today(), ts: now() });
+  Store.set('income_log', log);
+
+  // Clear inputs
+  document.getElementById('income-amount').value = '';
+  document.getElementById('income-hours').value = '';
+
+  renderFinance();
+  showToast(`$${amount.toFixed(2)} logged from ${source}. Keep going.`);
+}
+
+function clearOldIncome() {
+  const log = Store.get('income_log', []);
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - 30);
+  const filtered = log.filter(e => new Date(e.date) > cutoff);
+  Store.set('income_log', filtered);
+  renderFinance();
+  showToast('Cleared entries older than 30 days.');
+}
+
+function renderFinance() {
+  const log = Store.get('income_log', []);
+  const debts = Store.get('debts', []);
+
+  // Calculate this week
+  const weekStart = new Date();
+  weekStart.setDate(weekStart.getDate() - weekStart.getDay()); // Sunday
+  weekStart.setHours(0,0,0,0);
+  const weekEntries = log.filter(e => new Date(e.date + 'T00:00:00') >= weekStart);
+  const weekTotal = weekEntries.reduce((s, e) => s + e.amount, 0);
+  const todayEntries = log.filter(e => e.date === today());
+  const todayTotal = todayEntries.reduce((s, e) => s + e.amount, 0);
+  const totalDebt = debts.reduce((s, d) => s + parseFloat(d.remaining || 0), 0);
+  const netPos = weekTotal - totalDebt; // simplified
+
+  document.getElementById('weekly-earned').textContent = fmtCurrency(weekTotal);
+  document.getElementById('today-earned').textContent = fmtCurrency(todayTotal);
+  document.getElementById('total-debt').textContent = fmtCurrency(totalDebt);
+  document.getElementById('net-position').textContent = fmtCurrency(netPos);
+  document.getElementById('net-position').style.color = netPos >= 0 ? 'var(--raahi)' : '#FF6060';
+  document.getElementById('weekly-fill').style.width = Math.min(100, (weekTotal / WEEKLY_GOAL) * 100) + '%';
+
+  // Income log
+  const incomeEl = document.getElementById('income-list');
+  if (!log.length) {
+    incomeEl.innerHTML = '<div class="empty">No income logged yet.<br/>Every dollar counts.</div>';
+  } else {
+    incomeEl.innerHTML = log.slice(0, 15).map(e => `
+      <div class="income-row">
+        <span style="color:var(--text3)">${fmtDate(e.date)}</span>
+        <span>${e.source}${e.hours ? ` · ${e.hours}h` : ''}</span>
+        <span class="income-amount">${fmtCurrency(e.amount)}</span>
+        <button onclick="deleteIncome('${e.id}')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:12px">✕</button>
+      </div>`).join('');
+  }
+
+  // Debt list
+  const debtEl = document.getElementById('debt-list');
+  if (!debts.length) {
+    debtEl.innerHTML = '<div class="empty">No debts tracked yet.<br/>Add them. Face them. Defeat them.</div>';
+  } else {
+    debtEl.innerHTML = debts.map(d => {
+      const pct = d.total > 0 ? Math.round(((d.total - d.remaining) / d.total) * 100) : 0;
+      return `<div class="debt-item">
+        <div class="debt-header">
+          <span class="debt-name">${d.name}</span>
+          <div class="debt-amounts">
+            <span class="debt-total">${fmtCurrency(d.remaining)}</span>
+            <span style="color:var(--text3)"> / ${fmtCurrency(d.total)}</span>
+            <button onclick="deleteDebt('${d.id}')" style="background:none;border:none;color:var(--text3);cursor:pointer;margin-left:8px;font-size:12px">✕</button>
+          </div>
+        </div>
+        <div class="progress-wrap">
+          <div class="progress-label"><span>Paid off ${pct}%</span><button onclick="updateDebt('${d.id}')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-family:var(--font-mono);font-size:10px">Update</button></div>
+          <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:var(--raahi)"></div></div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+}
+
+function deleteIncome(id) {
+  let log = Store.get('income_log', []);
+  log = log.filter(e => e.id !== id);
+  Store.set('income_log', log);
+  renderFinance();
+}
+
+function openAddDebt() {
+  const f = document.getElementById('add-debt-form');
+  f.style.display = f.style.display === 'none' ? 'block' : 'none';
+}
+
+function saveDebt() {
+  const name = document.getElementById('debt-name').value.trim();
+  const total = parseFloat(document.getElementById('debt-total').value);
+  const remaining = parseFloat(document.getElementById('debt-remaining').value);
+  if (!name || !total) { showToast('Fill in the debt details.'); return; }
+  const debts = Store.get('debts', []);
+  debts.push({ id: uid(), name, total, remaining: remaining || total, created: today() });
+  Store.set('debts', debts);
+  document.getElementById('add-debt-form').style.display = 'none';
+  document.getElementById('debt-name').value = '';
+  document.getElementById('debt-total').value = '';
+  document.getElementById('debt-remaining').value = '';
+  renderFinance();
+  showToast('Debt tracked. Now go defeat it.');
+}
+
+function deleteDebt(id) {
+  let debts = Store.get('debts', []);
+  debts = debts.filter(d => d.id !== id);
+  Store.set('debts', debts);
+  renderFinance();
+}
+
+function updateDebt(id) {
+  const newAmt = prompt('Enter updated remaining amount ($):');
+  if (newAmt === null) return;
+  const amt = parseFloat(newAmt);
+  if (isNaN(amt)) return;
+  const debts = Store.get('debts', []);
+  const d = debts.find(d => d.id === id);
+  if (d) d.remaining = amt;
+  Store.set('debts', debts);
+  renderFinance();
+  showToast('Debt updated. Progress!');
+}
+
+// ════════════════════════════════════════════════
+// IDEA VAULT
+// Quick capture — the ADHD lifeline
+// ════════════════════════════════════════════════
+function saveIdea() {
+  const text = document.getElementById('idea-input').value.trim();
+  if (!text) { showToast('Type something first.'); return; }
+  const ideas = Store.get('ideas', []);
+  ideas.unshift({
+    id: uid(),
+    text,
+    cat: document.getElementById('idea-cat').value,
+    created: today(),
+    ts: now()
+  });
+  Store.set('ideas', ideas);
+  document.getElementById('idea-input').value = '';
+  renderIdeas();
+  showToast('Idea captured. Kept safe.');
+}
+
+function deleteIdea(id) {
+  let ideas = Store.get('ideas', []);
+  ideas = ideas.filter(i => i.id !== id);
+  Store.set('ideas', ideas);
+  renderIdeas();
+}
+
+function clearDoneIdeas() {
+  // Clear ideas older than 60 days
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - 60);
+  let ideas = Store.get('ideas', []);
+  ideas = ideas.filter(i => new Date(i.ts) > cutoff);
+  Store.set('ideas', ideas);
+  renderIdeas();
+  showToast('Old ideas cleared.');
+}
+
+const CAT_LABELS = {
+  suman: 'SUMAN', raahi: 'RAAHI', one: 'THE ONE', content: 'CONTENT', work: 'OT/ICS'
+};
+
+function renderIdeas() {
+  let ideas = Store.get('ideas', []);
+  const filter = document.getElementById('idea-filter').value;
+  if (filter !== 'all') ideas = ideas.filter(i => i.cat === filter);
+  document.getElementById('idea-count').textContent = `(${ideas.length})`;
+
+  const el = document.getElementById('idea-list');
+  if (!ideas.length) {
+    el.innerHTML = '<div class="empty">Vault is empty.<br/>Capture your next idea above.</div>';
+    return;
+  }
+  el.innerHTML = ideas.map(idea => `
+    <div class="idea-item" data-cat="${idea.cat}">
+      <div class="idea-text">${idea.text}</div>
+      <div class="idea-footer">
+        <span class="badge badge-${['suman','raahi','one'].includes(idea.cat) ? idea.cat : 'raahi'}" style="font-size:9px">${CAT_LABELS[idea.cat] || idea.cat.toUpperCase()}</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span>${fmtDate(idea.created)}</span>
+          <button class="idea-del" onclick="deleteIdea('${idea.id}')">✕</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+// ════════════════════════════════════════════════
+// SADHANA LOG
+// Daily spiritual practice tracker
+// ════════════════════════════════════════════════
+const PRACTICES = [
+  { id: 'shree_lalita', name: 'Shree Lalita Stotram', icon: '🌸', duration: '~10 min' },
+  { id: 'meditation',   name: 'Meditation',            icon: '🧘', duration: '~20 min' },
+  { id: 'pranayama',    name: 'Pranayama / Breathwork', icon: '💨', duration: '~10 min' },
+  { id: 'cold_water',   name: 'Cold Water / Ritual',   icon: '💧', duration: 'morning'  },
+  { id: 'clove_tea',    name: 'Evening Wind-Down',      icon: '🍵', duration: 'evening'  },
+  { id: 'gratitude',    name: 'Gratitude',              icon: '🙏', duration: '~3 min'  },
+];
+
+function togglePractice(id) {
+  const done = Store.get('sadhana_' + today(), {});
+  done[id] = !done[id];
+  Store.set('sadhana_' + today(), done);
+  renderPractices();
+  updateStreak();
+}
+
+function renderPractices() {
+  const done = Store.get('sadhana_' + today(), {});
+  const el = document.getElementById('practice-list');
+  el.innerHTML = PRACTICES.map(p => `
+    <div class="practice-item ${done[p.id] ? 'done' : ''}" onclick="togglePractice('${p.id}')">
+      <span class="practice-icon">${p.icon}</span>
+      <span class="practice-name">${p.name}</span>
+      <span class="practice-duration">${p.duration}</span>
+      <span style="font-size:16px;color:var(--one)">${done[p.id] ? '✓' : ''}</span>
+    </div>`).join('');
+
+  // Progress for today
+  const completedCount = Object.values(done).filter(Boolean).length;
+  const totalCount = PRACTICES.length;
+  // No extra progress bar needed — streak covers it
+}
+
+function updateStreak() {
+  // Count consecutive days with at least one practice completed
+  let streak = 0;
+  const checkDate = new Date();
+  for (let i = 0; i < 365; i++) {
+    const dateKey = checkDate.toISOString().slice(0, 10);
+    const done = Store.get('sadhana_' + dateKey, {});
+    if (Object.values(done).some(Boolean)) {
+      streak++;
+      checkDate.setDate(checkDate.getDate() - 1);
+    } else {
+      break;
+    }
+  }
+  document.getElementById('streak-num').textContent = streak;
+  const msgs = [
+    'Every journey begins with one step.',
+    'The discipline starts now.',
+    'Consistency is the highest form of devotion.',
+    'Suman earns it. Raahi lives it. The One gives it.',
+    'The sadhana is the anchor. Hold it.',
+    'Your practice is your foundation. Nothing else matters.',
+    `${streak} days. The One is watching.`
+  ];
+  document.getElementById('streak-msg').textContent = streak === 0
+    ? 'Start your practice today.'
+    : msgs[Math.min(streak - 1, msgs.length - 1)];
+}
+
+function saveJournal() {
+  const text = document.getElementById('journal-entry').value.trim();
+  if (!text) return;
+  const entries = Store.get('journal', []);
+  entries.unshift({ id: uid(), text, date: today(), ts: now() });
+  if (entries.length > 60) entries.pop(); // Keep 60 entries max
+  Store.set('journal', entries);
+  document.getElementById('journal-entry').value = '';
+  renderJournal();
+  showToast('Reflection saved.');
+}
+
+function renderJournal() {
+  const entries = Store.get('journal', []);
+  const el = document.getElementById('journal-history');
+  if (!entries.length) return;
+  el.innerHTML = '<div class="sec-title"><span>Past Reflections</span></div>' +
+    entries.slice(0, 7).map(e => `
+      <div class="card" style="margin-bottom:8px">
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-bottom:6px">${fmtDate(e.date)}</div>
+        <div style="font-size:13px;line-height:1.6;color:var(--text2);font-style:italic">${e.text}</div>
+      </div>`).join('');
+}
+
+// ════════════════════════════════════════════════
+// INIT — runs on page load
+// ════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+
+  // Restore identity
+  const savedIdentity = Store.get('identity', 'suman');
+  setIdentity(savedIdentity);
+
+  // Update header
+  updateHeader();
+  setInterval(updateHeader, 60000); // Update every minute
+
+  // War room
+  renderPriorities();
+  renderTasks();
+  updateWarRoomProgress();
+
+  // Finance
+  renderFinance();
+
+  // Ideas
+  renderIdeas();
+
+  // Sadhana
+  renderPractices();
+  updateStreak();
+  renderJournal();
+
+});
+
+</script>
+</body>
+</html>
